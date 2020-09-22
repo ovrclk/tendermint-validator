@@ -128,7 +128,17 @@ func (rs *NodeClient) handleRequest(req pv.SignerMessage) (pv.SignerMessage, err
 
 	switch typedReq := req.(type) {
 	case *pv.PubKeyRequest:
-		pubKey := rs.privVal.GetPubKey()
+		pubKey, err := rs.privVal.GetPubKey()
+		if err != nil {
+			rs.Logger.Error("Failed to get pubkey")
+			res = &pv.SignedVoteResponse{
+				Vote: nil,
+				Error: &pv.RemoteSignerError{
+					Code:        0,
+					Description: err.Error(),
+				},
+			}
+		}
 		res = &pv.PubKeyResponse{PubKey: pubKey, Error: nil}
 		rs.Logger.Info("Signed PubKeyRequest", "address", rs.address, "pubkey", pubKey)
 	case *pv.SignVoteRequest:
